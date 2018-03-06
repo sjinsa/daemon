@@ -7,4 +7,4 @@ include_directories(src)
 aux_source_directory(test TEST)
 aux_source_directory(src SRC)
 
-add_executable(daemon ${SRC} ${TEST})
+add_executable(daemon ${SRC} ${TEST} test/main.cc)

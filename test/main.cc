@@ -5,6 +5,7 @@
 #include "daemon.h"
 #include "string"
 #include "threadpool.h"
+#include "algorithm"
 
 int start_id = 0;
 int end_id = 100000;
@@ -14,6 +15,7 @@ struct Args{
     int fd;
     int start_id;
     int end_id;
+    Args():fd(0),start_id(0),end_id(0){}
 };
 pthread_mutex_t lock;
 
@@ -35,6 +37,8 @@ int main(int argc, char *argv[]) {
     init_daemon();
     int fd;
 
+    pthread_mutex_init(&lock, NULL);
+
     //初始化线程池配置
     const int thread_cnt = 10;
     const int queue_size = 64;
@@ -53,15 +57,15 @@ int main(int argc, char *argv[]) {
 
     int n_threads = (end_id-start_id-1)/step+1;
     int ret;
-    Args args;
+    Args args[n_threads];
 
     for(int i = 0; i < n_threads; ++i){
         int s = i*step;
-        int e = s + step;
-        args.start_id = s;
-        args.end_id = e;
-        args.fd = fd;
-        ret = threadpool_add(tpool, &task, &args, 0);
+        int e = std::min(s+step, end_id);
+        args[i].start_id = s;
+        args[i].end_id = e;
+        args[i].fd = fd;
+        ret = threadpool_add(tpool, &task, args+i, 0);
         if(ret){
             fprintf(stderr, "threadpool_add failed");
             exit(1);
